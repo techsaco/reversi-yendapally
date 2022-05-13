@@ -8,7 +8,7 @@ function getIRIParameterValue(requestedKey){
 
         if (key=== requestedKey){
             return value;
-
+            
         }
 }
 }
