@@ -4,7 +4,7 @@ function getIRIParameterValue(requestedKey){
     for(let i = 0; i< pageIRIVariables.length; i++){
         let data = pageIRIVariables[i].split('=');
         let key = data[0];
-        let data = data[1];
+        let value = data[1];
 
         if (key=== requestedKey){
             return value;
