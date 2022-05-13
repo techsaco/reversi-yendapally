@@ -1,8 +1,8 @@
 function getIRIParameterValue(requestedKey){
     let pageIRI = window.location.search.substring(1);
     let pageIRIVariable = pageIRI.split('&');
-    for(let i = 0; i< pageIRIVariables.length; i++){
-        let data = pageIRIVariables[i].split('=');
+    for(let i = 0; i< pageIRIVariable.length; i++){
+        let data = pageIRIVariable[i].split('=');
         let key = data[0];
         let data = data[1];
 
