@@ -10,11 +10,10 @@ function getIRIParameterValue(requestedKey){
             return value;
             
         }
-}
+    }
 }
 
 let username = getIRIParameterValue('username');
-alert(hi);
 if ((typeof username == 'undefined')|| (username === null)){
     username = "Anonymous_"+Math.floor(Math.random()*1000);
 }
