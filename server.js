@@ -194,6 +194,173 @@ socket.on('invite', (payload)=> {
     });
     
 });
+//
+
+socket.on('uninvite', (payload)=> {
+    serverLog('Server received a command', '\'uninvite\'', JSON.stringify(payload));
+
+    if ((typeof payload == 'undefined') || (payload === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = 'client did not send a payload';
+        socket.emit('uninvited', response);
+        serverLog('uninvite command failed', JSON.stringify(response));
+        return;
+    }
+    let requested_user = payload.requested_user;
+    let room = players[socket.id].room;
+    let username = players[socket.id].username;
+
+    if ((typeof requested_user == 'undefined') || (requested_user === null)){
+        response = {
+        result:'fail',
+        message: 'client did not request a valid user to invite to play'
+        };
+        
+        socket.emit('uninvited', response);
+        serverLog('uninvite command failed', JSON.stringify(response));
+        return;
+    }
+
+    if ((typeof room == 'undefined') || (room === null)){
+        response = {
+            result:'fail',
+            message: 'the user that was uninvited was not in a room'
+            };
+            
+            socket.emit('uninvited', response);
+            serverLog('uninvite command failed', JSON.stringify(response));
+            return;
+    }
+
+    if ((typeof username == 'undefined') || (username === null)){
+        response = {
+            result:'fail',
+            message: 'the user that was uninvited does not have a name registered'
+            };
+            
+            socket.emit('uninvited', response);
+            serverLog('uninvite command failed', JSON.stringify(response));
+            return;
+    }
+
+  
+
+    io.in(room).allSockets().then((sockets)=>{
+       
+
+        if ((typeof sockets == 'undefined') || (sockets === null)|| !sockets.has(requested_user)){
+            response = {
+                result:'fail',
+                message: 'the user that was invited is no longer in the room'
+                };
+                
+                socket.emit('uninvited', response);
+                serverLog('uninvite command failed', JSON.stringify(response));
+                return;
+            
+        }
+        else{
+            response = {
+                result:'success',
+                socket_id: requested_user
+                };
+                
+                socket.emit('uninvited', response);
+
+                response = {
+                    result:'success',
+                    socket_id: socket.id
+                    };
+            socket.to(requested_user).emit("uninvited", response);
+            serverLog('uninvite command succeeded', JSON.stringify(response));
+        }     
+    });
+    
+});
+////
+
+socket.on('game_start', (payload)=> {
+    serverLog('Server received a command', '\'game_start\'', JSON.stringify(payload));
+
+    if ((typeof payload == 'undefined') || (payload === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = 'client did not send a payload';
+        socket.emit('game_start_response', response);
+        serverLog('game_start command failed', JSON.stringify(response));
+        return;
+    }
+    let requested_user = payload.requested_user;
+    let room = players[socket.id].room;
+    let username = players[socket.id].username;
+
+    if ((typeof requested_user == 'undefined') || (requested_user === null)){
+        response = {
+        result:'fail',
+        message: 'client did not request a valid user to invite to play'
+        };
+        
+        socket.emit('game_start_response', response);
+        serverLog('game_start command failed', JSON.stringify(response));
+        return;
+    }
+
+    if ((typeof room == 'undefined') || (room === null)){
+        response = {
+            result:'fail',
+            message: 'the user that was engaged to play was not in a room'
+            };
+            
+            socket.emit('game_start_response', response);
+            serverLog('game_start command failed', JSON.stringify(response));
+            return;
+    }
+
+    if ((typeof username == 'undefined') || (username === null)){
+        response = {
+            result:'fail',
+            message: 'the user that was engaged to play does not have a name registered'
+            };
+            
+            socket.emit('game_start_response', response);
+            serverLog('game_start command failed', JSON.stringify(response));
+            return;
+    }
+
+  
+
+    io.in(room).allSockets().then((sockets)=>{
+       
+
+        if ((typeof sockets == 'undefined') || (sockets === null)|| !sockets.has(requested_user)){
+            response = {
+                result:'fail',
+                message: 'the user that was engaged to play is no longer in the room'
+                };
+                
+                socket.emit('game_start_response', response);
+                serverLog('game_start command failed', JSON.stringify(response));
+                return;
+            
+        }
+        else{
+            
+                let game_id = Math.floor(1+ Math.random() * 0x1000000).toString(16);
+            response = {
+                result:'success',
+                game_id: game_id,
+                socket_id: requested_user
+                };
+                
+            socket.emit('game_start_response', response);
+            socket.to(requested_user).emit("game_start_response", response);
+            serverLog('game_start command succeeded', JSON.stringify(response));
+        }     
+    });
+    
+});
+
 
 socket.on('disconnect', ()=> {
     serverLog('a page disconnected from the server :' + socket.id);
