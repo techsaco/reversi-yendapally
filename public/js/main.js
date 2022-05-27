@@ -231,12 +231,101 @@ socket.on('send_chat_message_response', (payload)=>{
         return;
     }
 
-let newHTML = '<p class= \'chat_message\'>'+payload.username+': '+payload.message+'</p>'
-let newNode = $(newHTML);
-newNode.hide();
-$('#messages').prepend(newNode);
-newNode.show("fade", 500);
-})
+        let newHTML = '<p class= \'chat_message\'>'+payload.username+': '+payload.message+'</p>'
+        let newNode = $(newHTML);
+        newNode.hide();
+        $('#messages').prepend(newNode);
+        newNode.show("fade", 500);
+        })
+//
+let old_board = [
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?'],
+    ['?','?','?','?','?','?','?','?']
+]
+        socket.on('game_update', (payload)=>{
+            if((typeof payload == 'undefined') || ((payload)=== null)){
+                console.log('Server did not send a payload');
+                return;
+            }
+            if(payload.result === 'fail'){
+                console.log(payload.message);
+                return;
+            }
+
+            let board = payload.game.board;
+            if((typeof board == 'undefined')|| (board === null)){
+                console.log('Server did not send a valid board to display');
+                return;
+            }        
+
+
+            for (let row = 0; row<8; row++){
+                for(let column = 0; column<8; column++){
+                    if(old_board[row][column]!== board[row][column]){
+                        let graphic = '';
+                        let altTag = '';
+                        if((old_board[row][column] === '?') && (board[row][column] === '')){
+                            graphic = 'empty.gif';
+                            altTag = 'empty space';
+                        }
+
+                        else if((old_board[row][column] === '?') && (board[row][column] === 'w')){
+                                graphic = 'emptytowhite.gif';
+                                altTag = 'white token';
+                                }
+                        else if((old_board[row][column] === '?') && (board[row][column] === 'b')){
+                                    graphic = 'emptytoblack.gif';
+                                    altTag = 'black token';
+                                    }
+                        else if((old_board[row][column] === ' ') && (board[row][column] === 'w')){
+                                    graphic = 'emptytowhite.gif';
+                                    altTag = 'white token';
+                                    }
+
+                        else if((old_board[row][column] === ' ') && (board[row][column] === 'b')){
+                                    graphic = 'emptytoblack.gif';
+                                    altTag = 'black token';
+                                    }
+                        else if((old_board[row][column] === 'w') && (board[row][column] === ' ')){
+                                    graphic = 'whitetoempty.gif';
+                                    altTag = 'empty space';
+                                    }
+                        else if((old_board[row][column] === 'b') && (board[row][column] === ' ')){
+                                    graphic = 'blacktoempty.gif';
+                                    altTag = 'empty space';
+                                    }
+                        
+                        else if((old_board[row][column] === 'w') && (board[row][column] === 'b')){
+                                        graphic = 'whitetoblack.gif';
+                                        altTag = 'black token';
+                                        }
+                            else if((old_board[row][column] === 'b') && (board[row][column] === 'w')){
+                                        graphic = 'blacktowhite.gif';
+                                        altTag = 'white token';
+                                        }
+                            else {
+                                graphic = "error.gif";
+                                altTag = "white token";
+                            }
+
+                            const t = Date.now();
+                            $('#'+row+'_'+column).html('<img class= "img-fluid" src = "images/'+graphic+'?time='+t+'" alt="'+altTag+'" />');
+
+
+
+                    }
+                }
+            }
+                
+                })
+
+
 
 $(()=>{
     let request = {};
