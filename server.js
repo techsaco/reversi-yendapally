@@ -437,6 +437,115 @@ socket.on('send_chat_message', (payload)=> {
     io.of('/').to(room).emit('send_chat_message_response', response);
     serverLog('send_chat_message command succeeded', JSON.stringify(response));
 });
+//play
+socket.on('play_token', (payload)=> {
+    serverLog('Server received a command', '\'play_token\'', JSON.stringify(payload));
+
+    if ((typeof payload == 'undefined') || (payload === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = 'client did not send a payload';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+let player = players[socket.id];
+
+    if ((typeof player == 'undefined') || (player === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = 'play_token came from an unregistered player';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+    
+let username = player.username;
+    if ((typeof username == 'undefined') || (username === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = 'play_token command did not come from a registered user';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+    let game_id = player.room;
+    if ((typeof game_id == 'undefined') || (game_id === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = ' no valid game';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+    let row = payload.row;
+    if ((typeof row == 'undefined') || (row === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = ' no valid row';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+    let column = payload.column;
+    if ((typeof column == 'undefined') || (column === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = ' no valid column';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+    let color = payload.color;
+    if ((typeof color == 'undefined') || (color === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = ' no valid color';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+    let game = games[game_id];
+    if ((typeof game == 'undefined') || (game === null)){
+        response = {};
+        response.result = 'fail';
+        response.message = ' no valid game';
+        socket.emit('play_token_response', response);
+        serverLog('play_token command failed', JSON.stringify(response));
+        return;
+    }
+
+
+
+
+    
+
+    let response = {
+        result: 'success'
+    }
+
+    socket.emit('play_token_response', response);
+
+    if (color == 'white'){
+        game.board[row][column] = 'w';
+        game.whose_turn = 'black';
+    }
+    else if (color == 'black'){
+        game.board[row][column] = 'b';
+        game.whose_turn = 'white';
+    }
+
+    send_game_update(socket,game_id,'played a token')
+    //handle command
+
+
+});
 });
 
 ///
@@ -475,14 +584,95 @@ function send_game_update(socket, game_id, message) {
         games[game_id] = create_new_game(); 
     }
 
-    let payload = {
+io.of('/').to(game_id).allSockets().then((sockets)=>{
+    
+    const iterator = sockets[Symbol.iterator]();
+    if(sockets.size >= 1){
+        let first = iterator.next().value;
+        if((games[game_id].player_white.socket != first) &&
+        (games[game_id].player_black.socket != first)) {
+            if (games[game_id].player_white.socket === ''){
+                console.log("White is assigned to:" + first);
+                games[game_id].player_white.socket = first;
+                games[game_id].player_white.username = players[first].username;
+
+            }
+            else if (games[game_id].player_black.socket === ''){
+                console.log("black is assigned to:" + first);
+                games[game_id].player_black.socket = first;
+                games[game_id].player_black.username = players[first].username;
+            }
+
+            else {
+                console.log("Kicking" + first + "out of game: " + game_id )
+                io.in(first).socketsLeave([game_id]);
+            }
+        } 
+    }
+
+// bracket extra maybe
+
+if(sockets.size >= 2){
+    let second = iterator.next().value;
+    if((games[game_id].player_white.socket != second) &&
+    (games[game_id].player_black.socket != second)) {
+        if (games[game_id].player_white.socket === ''){
+            console.log("White is assigned to:" + second);
+            games[game_id].player_white.socket = second;
+            games[game_id].player_white.username = players[second].username;
+
+        }
+        else if (games[game_id].player_black.socket === ''){
+            console.log("black is assigned to:" + second);
+            games[game_id].player_black.socket = second;
+            games[game_id].player_black.username = players[second].username;
+        }
+
+        else {
+            console.log("Kicking" + second + "out of game: " + game_id )
+            io.in(second).socketsLeave([game_id]);
+        }
+    } 
+}
+    
+    
+ let payload = {
         result: 'success',
         game_id: game_id,
         game: games[game_id],
         message: message
     }
     io.of("/").to(game_id).emit('game_update', payload);
+})
+  
+    let count = 0;
+    for (let row = 0; row < 8; row++){
+        for(let col = 0; col < 8; col++){
+            if(games[game_id].board[row][col] != ' '){
+                count++;
+            }
+        }
+    }
+    if(count === 64){
+        let payload = {
+            result: 'success',
+            game_id: game_id,
+            game: games[game_id],
+            who_won: 'everyone'
 
+        }
+        io.in(game_id).emit('game_over', payload);
+
+        setTimeout(
+            ((id)=> {
+                return(()=> {
+                    delete games[id];
+                });
+            }) (game_id), 60 * 60 * 1000
+            );
+        
+
+    }
 }
 
 
