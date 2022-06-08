@@ -279,7 +279,25 @@ let my_color = "";
                 return;
             }
 
-            $("#my_color").html('<h3 id = "my_color">I am '+ my_color+'</h3>');
+            if(my_color === 'white'){
+                $("#my_color").html('<h3 id = "my_color">I am white </h3>');
+            }
+            else if(my_color === 'black'){
+                $("#my_color").html('<h3 id = "my_color">I am black </h3>');
+            }
+            else {
+                $("#my_color").html('<h3 id = "my_color">I dont know what color i am </h3>');
+            }
+
+            if(payload.game.whose_turn === 'white'){
+                $("#my_color").append('<h4> It is white\'s turn </h4>');
+            }
+            else if(payload.game.whose_turn === 'black'){
+                $("#my_color").append('<h4> It is black\'s turn </h4>');
+            }
+            else {
+                $("#my_color").append('<h4> I dont know whose turn it is </h4>');
+            }
 
             let whitesum = 0;
             let blacksum = 0;
@@ -344,9 +362,11 @@ let my_color = "";
 
                             const t = Date.now();
                             $('#'+row+'_'+column).html('<img class= "img-fluid" src = "images/'+graphic+'?time='+t+'" alt="'+altTag+'" />');
+                        }
                             $('#'+row+'_'+column).off('click');
-
-                            if (board[row][column] === ' '){
+                            $('#'+ row + '_' + column).removeClass('hovered_over')
+                            if(payload.game.whose_turn === my_color){
+                                if(payload.game.legal_moves[row][column] === my_color.substr(0,1)){
                                 $('#'+row+'_'+column).addClass('hovered_over');
                                 $('#'+ row+ '_' + column).click(((r,c)=> {
                                     return (()=> {
@@ -360,12 +380,7 @@ let my_color = "";
                                     });
                                 })(row,column));
                                 }
-                                else{
-                                    $('#'+ row + '_' + column).removeClass('hovered_over')
-                                }
-                            }
-
-
+                            }       
                     }
                 }
             
